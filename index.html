@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Spiders ✠ System of a Down</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=IM+Fell+English:ital@0;1&family=Special+Elite&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --void:    #000000;
+      --pit:     #050000;
+      --lair:    #0a0000;
+      --deep:    #1a0000;
+      --dark:    #2b0000;
+      --blood:   #6b0000;
+      --crimson: #8b0000;
+      --red:     #c0001a;
+      --bright:  #e0101e;
+      --flame:   #ff2030;
+      --red-dim: rgba(139,0,0,0.35);
+      --red-glow:rgba(200,0,20,0.55);
+      --radius:  4px;
+    }
+
+    html, body { height: 100%; }
+    body {
+      font-family: 'Special Elite', monospace;
+      min-height: 100vh;
+      background: var(--void);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+      cursor: default;
+    }
+
+    /* ── GRAIN ── */
+    #grain {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.07;
+    }
+
+    /* ── SCANLINES ── */
+    #scanlines {
+      position: fixed; inset: 0; z-index: 2; pointer-events: none;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,0.12) 3px,
+        rgba(0,0,0,0.12) 4px
+      );
+      opacity: 0.5;
+    }
+
+    /* ── VIGNETTE ── */
+    #vignette {
+      position: fixed; inset: 0; z-index: 2; pointer-events: none;
+      background: radial-gradient(ellipse 85% 80% at 50% 50%, transparent 30%, rgba(0,0,0,0.92) 100%);
+      transition: background 1.2s ease;
+    }
+    #vignette.playing {
+      background: radial-gradient(ellipse 85% 80% at 50% 50%, transparent 20%, rgba(20,0,0,0.88) 80%, rgba(80,0,0,0.97) 100%);
+    }
+
+    /* ── RED PULSE OVERLAY ── */
+    #redpulse {
+      position: fixed; inset: 0; z-index: 3; pointer-events: none;
+      opacity: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(180,0,10,0.08) 0%, transparent 70%);
+      transition: opacity 1.5s ease;
+    }
+    #redpulse.on {
+      opacity: 1;
+      animation: pulseRed 4s ease-in-out infinite;
+    }
+    @keyframes pulseRed {
+      0%,100% { opacity: 0.5; }
+      50%      { opacity: 1; }
+    }
+
+    /* ── FLASH on play ── */
+    #flash {
+      position: fixed; inset: 0; z-index: 50; pointer-events: none;
+      background: rgba(180,0,0,0.3);
+      opacity: 0;
+    }
+    #flash.burst {
+      animation: flashBurst 0.6s ease-out forwards;
+    }
+    @keyframes flashBurst {
+      0%   { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* ── SPIDER WEBS ── */
+    #webs {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      opacity: 0.12;
+      transition: opacity 1.5s ease;
+    }
+    #webs.playing { opacity: 0.32; }
+
+    /* ── PARTICLES ── */
+    #particles { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
+
+    /* ── DRIP LINES ── */
+    .drip {
+      position: fixed; top: 0; z-index: 4; pointer-events: none;
+      width: 1px;
+      background: linear-gradient(to bottom, var(--blood), var(--crimson), transparent);
+      border-radius: 0 0 2px 2px;
+      opacity: 0;
+      animation: drip var(--d) ease-in var(--delay) infinite;
+    }
+    @keyframes drip {
+      0%   { height: 0;   opacity: 0; top: 0; }
+      10%  { opacity: 0.7; }
+      80%  { opacity: 0.5; }
+      100% { height: var(--h); opacity: 0; top: 0; }
+    }
+
+    /* ══════════ PAGE ══════════ */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .page {
+      position: relative; z-index: 10;
+      width: 100%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 100vh;
+      padding: 32px 20px;
+      gap: 0;
+    }
+
+    /* ── BAND NAME ── */
+    .band-name {
+      font-family: 'Cinzel', serif;
+      font-weight: 400;
+      font-size: 0.65rem;
+      letter-spacing: 0.6em;
+      text-transform: uppercase;
+      color: var(--blood);
+      text-align: center;
+      margin-bottom: 10px;
+      animation: fadeUp 1.2s ease both;
+    }
+
+    /* ── TITLE ── */
+    .page-title {
+      font-family: 'Cinzel', serif;
+      font-weight: 900;
+      font-size: 5rem;
+      letter-spacing: 0.22em;
+      text-align: center;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      background: linear-gradient(180deg, #ff2030 0%, #c0001a 30%, #8b0000 60%, #3b0000 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 50px rgba(200,0,10,0.2)) drop-shadow(0 4px 16px rgba(0,0,0,1));
+      animation: fadeUp 1.2s ease both;
+    }
+
+    .page-title.playing {
+      filter: drop-shadow(0 0 30px rgba(220,0,0,0.7)) drop-shadow(0 0 60px rgba(180,0,0,0.5)) drop-shadow(0 4px 16px rgba(0,0,0,1));
+      animation: fadeUp 1.2s ease both, titleBreath 4s ease-in-out 1.2s infinite;
+    }
+    @keyframes titleBreath {
+      0%,100% { filter: drop-shadow(0 0 30px rgba(220,0,0,0.6)) drop-shadow(0 0 60px rgba(180,0,0,0.4)) drop-shadow(0 4px 16px rgba(0,0,0,1)); }
+      50%      { filter: drop-shadow(0 0 50px rgba(255,20,20,0.85)) drop-shadow(0 0 90px rgba(200,0,0,0.6)) drop-shadow(0 4px 16px rgba(0,0,0,1)); }
+    }
+
+    .rule {
+      width: 140px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--blood), transparent);
+      margin: 14px auto 0;
+      animation: fadeUp 1.2s 0.15s ease both;
+      transition: width 1.2s ease, box-shadow 1.2s ease;
+    }
+    .rule.playing {
+      width: 300px;
+      box-shadow: 0 0 12px var(--red), 0 0 30px var(--crimson);
+    }
+
+    /* ── THE PHRASE ── */
+    .phrase-wrapper {
+      margin: 44px 0 40px;
+      max-width: 680px;
+      text-align: center;
+      position: relative;
+      animation: fadeUp 1.2s 0.3s ease both;
+    }
+
+    .phrase-deco {
+      font-family: 'Cinzel', serif;
+      font-size: 0.55rem;
+      letter-spacing: 0.55em;
+      text-transform: uppercase;
+      color: var(--dark);
+      margin-bottom: 22px;
+      transition: color 1s ease;
+    }
+    .phrase-deco.playing { color: var(--blood); }
+
+    .phrase {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 1.55rem;
+      line-height: 1.75;
+      color: rgba(180,0,0,0.18);
+      letter-spacing: 0.02em;
+      transition: color 2s ease, text-shadow 2s ease;
+      position: relative;
+    }
+    .phrase.playing {
+      color: rgba(210,20,20,0.85);
+      text-shadow:
+        0 0 20px rgba(220,0,0,0.6),
+        0 0 50px rgba(180,0,0,0.4),
+        0 0 100px rgba(140,0,0,0.25);
+    }
+    .phrase.playing .heart {
+      color: rgba(255,40,40,1);
+      text-shadow:
+        0 0 16px rgba(255,50,50,0.9),
+        0 0 40px rgba(220,0,0,0.7);
+      animation: heartbeat 1.8s ease-in-out infinite;
+    }
+    @keyframes heartbeat {
+      0%,100% { transform: scale(1); }
+      14%      { transform: scale(1.08); }
+      28%      { transform: scale(1); }
+      42%      { transform: scale(1.05); }
+    }
+    .heart { display: inline-block; transition: color 2s ease, text-shadow 2s ease; }
+
+    .phrase-deco-bot {
+      font-family: 'Cinzel', serif;
+      font-size: 0.55rem;
+      letter-spacing: 0.55em;
+      text-transform: uppercase;
+      color: var(--dark);
+      margin-top: 22px;
+      transition: color 1s ease;
+    }
+    .phrase-deco-bot.playing { color: var(--blood); }
+
+    /* ── PLAYER ── */
+    .player {
+      width: 100%; max-width: 520px;
+      animation: fadeUp 1.2s 0.5s ease both;
+    }
+
+    /* Progress */
+    .progress-track {
+      width: 100%; height: 1px;
+      background: rgba(100,0,0,0.25);
+      cursor: pointer; position: relative;
+      margin-bottom: 10px;
+      transition: height 0.2s ease;
+    }
+    .progress-track:hover { height: 2px; }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--dark), var(--blood), var(--bright));
+      width: 0%; position: relative;
+      transition: width 0.2s linear;
+    }
+    .progress-fill.glow {
+      box-shadow: 0 0 8px 1px var(--red-glow);
+    }
+    .progress-thumb {
+      position: absolute; right: -5px; top: 50%;
+      transform: translateY(-50%) scale(0);
+      width: 8px; height: 8px;
+      background: var(--bright);
+      box-shadow: 0 0 8px var(--flame);
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      opacity: 0;
+    }
+    .progress-track:hover .progress-thumb { transform: translateY(-50%) scale(1); opacity: 1; }
+
+    .time-row {
+      display: flex; justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .time-label {
+      font-family: 'Special Elite', monospace;
+      font-size: 0.6rem; color: var(--blood); letter-spacing: 0.1em;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex; align-items: center; justify-content: center;
+      gap: 14px; margin-bottom: 18px;
+    }
+
+    .btn-skip {
+      background: none; border: 1px solid var(--dark);
+      width: 36px; height: 36px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--blood);
+      transition: all 0.22s;
+    }
+    .btn-skip:hover { border-color: var(--blood); color: var(--bright); }
+    .btn-skip:active { transform: scale(0.88); }
+
+    .btn-play {
+      width: 58px; height: 58px;
+      border: 1px solid var(--blood);
+      cursor: pointer;
+      background: linear-gradient(135deg, rgba(80,0,0,0.25), rgba(0,0,0,0.7), rgba(80,0,0,0.2));
+      box-shadow: 0 4px 24px rgba(0,0,0,0.9), inset 0 1px 0 rgba(200,0,0,0.12);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--bright);
+      position: relative; overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      clip-path: polygon(5px 0%, 100% 0%, calc(100% - 5px) 100%, 0% 100%);
+    }
+    .btn-play .ripple {
+      position: absolute;
+      background: rgba(200,0,0,0.25);
+      width: 60px; height: 60px;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%) scale(0);
+      animation: ripple 0.5s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes ripple {
+      0%   { transform: translate(-50%,-50%) scale(0); opacity: 0.6; }
+      100% { transform: translate(-50%,-50%) scale(2.8); opacity: 0; }
+    }
+    .btn-play:hover {
+      transform: scale(1.07);
+      border-color: var(--bright);
+      box-shadow: 0 6px 30px rgba(0,0,0,0.95), 0 0 24px rgba(200,0,0,0.3);
+    }
+    .btn-play:active { transform: scale(0.9); }
+    .btn-play.playing {
+      border-color: var(--red);
+      animation: playPulse 3.5s ease-in-out infinite;
+    }
+    @keyframes playPulse {
+      0%,100% { box-shadow: 0 4px 24px rgba(0,0,0,0.9), 0 0 10px rgba(150,0,0,0.2); }
+      50%      { box-shadow: 0 4px 30px rgba(0,0,0,0.95), 0 0 30px rgba(200,0,0,0.45); }
+    }
+
+    .btn-mode {
+      background: none; border: none; cursor: pointer;
+      color: var(--dark); width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.2s, transform 0.2s;
+    }
+    .btn-mode:hover { color: var(--blood); transform: scale(1.15); }
+    .btn-mode.active { color: var(--bright); }
+
+    /* Volume */
+    .volume-row { display: flex; align-items: center; gap: 10px; }
+    .vol-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--blood); display: flex; align-items: center;
+      transition: color 0.2s; flex-shrink: 0;
+    }
+    .vol-btn:hover { color: var(--bright); }
+    .volume-slider {
+      flex: 1; -webkit-appearance: none; appearance: none;
+      height: 1px; background: rgba(100,0,0,0.3); outline: none; cursor: pointer;
+    }
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 8px; height: 8px;
+      background: var(--blood); cursor: pointer;
+      box-shadow: 0 0 6px var(--red-glow);
+      transition: transform 0.2s;
+    }
+    .volume-slider::-webkit-slider-thumb:hover { transform: scale(1.5); background: var(--bright); }
+    .vol-val {
+      font-family: 'Special Elite', monospace;
+      font-size: 0.58rem; color: var(--blood); min-width: 26px; text-align: right;
+    }
+
+    /* ── FOOTER ── */
+    .page-footer {
+      margin-top: 22px;
+      font-family: 'Special Elite', monospace;
+      font-size: 0.55rem; letter-spacing: 0.45em;
+      text-transform: uppercase; color: rgba(60,0,0,0.5);
+      text-align: center;
+      animation: fadeUp 1.2s 0.7s ease both;
+    }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; top: 22px; left: 50%; transform: translateX(-50%) translateY(-80px);
+      z-index: 100;
+      background: rgba(5,0,0,0.95);
+      border: 1px solid var(--dark);
+      padding: 8px 20px;
+      color: var(--blood);
+      font-family: 'Special Elite', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      transition: transform 0.4s cubic-bezier(.22,.68,0,1.2), opacity 0.35s ease;
+      opacity: 0; pointer-events: none;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    /* ── FLOAT ELEMENTS ── */
+    @keyframes floatUp {
+      0%   { transform: translateY(0) scale(1) rotate(0deg); opacity: 0.8; }
+      100% { transform: translateY(-130px) scale(0.4) rotate(var(--rot)); opacity: 0; }
+    }
+    .float-el {
+      position: fixed; pointer-events: none; z-index: 6;
+      animation: floatUp 2.2s ease-out forwards;
+      color: var(--blood); font-size: 1rem;
+      filter: drop-shadow(0 0 4px rgba(200,0,0,0.6));
+    }
+
+    /* ── SPIDER ── */
+    .spider-deco {
+      position: fixed; pointer-events: none; z-index: 5;
+      opacity: 0.12;
+      transition: opacity 1.2s ease;
+    }
+    .spider-deco.playing { opacity: 0.28; }
+
+    @media (max-width: 560px) {
+      .page-title { font-size: 3.2rem; }
+      .phrase { font-size: 1.2rem; }
+      .phrase-wrapper { padding: 0 10px; }
+    }
+
+    /* ── DISCORD CIRCLE BUTTON ── */
+    #contactBtn {
+      position: fixed; top: 22px; left: 22px;
+      z-index: 80;
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: rgba(8,0,0,0.92);
+      border: 1px solid var(--blood);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--blood);
+      transition: all 0.3s ease;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 0 0 0 rgba(180,0,0,0);
+    }
+    #contactBtn:hover {
+      color: var(--bright);
+      border-color: var(--bright);
+      box-shadow: 0 0 18px rgba(180,0,0,0.5), 0 0 40px rgba(120,0,0,0.3);
+      transform: scale(1.08);
+    }
+    #contactBtn.panel-open {
+      color: var(--bright);
+      border-color: var(--bright);
+      box-shadow: 0 0 20px rgba(200,0,0,0.55), 0 0 50px rgba(140,0,0,0.35);
+      animation: discordPulse 2.5s ease-in-out infinite;
+    }
+    @keyframes discordPulse {
+      0%,100% { box-shadow: 0 0 16px rgba(200,0,0,0.4), 0 0 40px rgba(140,0,0,0.25); }
+      50%      { box-shadow: 0 0 28px rgba(220,0,0,0.65), 0 0 60px rgba(160,0,0,0.4); }
+    }
+
+    /* ── CONTACT PANEL ── */
+    #contactPanel {
+      position: fixed;
+      top: 74px; left: 22px;
+      z-index: 79;
+      width: 220px;
+      background: rgba(4,0,0,0.97);
+      border: 1px solid var(--blood);
+      backdrop-filter: blur(28px);
+      padding: 18px 16px;
+      border-radius: 4px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-8px) scale(0.97);
+      transform-origin: top left;
+      transition: opacity 0.3s ease, transform 0.3s cubic-bezier(.22,.68,0,1.2);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.9), 0 0 20px rgba(120,0,0,0.2);
+    }
+    #contactPanel.open {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(0) scale(1);
+    }
+
+    .contact-header {
+      font-family: 'Cinzel', serif;
+      font-size: 0.55rem; letter-spacing: 0.55em;
+      text-transform: uppercase;
+      color: var(--blood);
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--dark);
+    }
+
+    .contact-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 8px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      position: relative;
+      transition: all 0.22s;
+    }
+    .contact-item:hover {
+      border-color: var(--dark);
+      background: rgba(80,0,0,0.1);
+    }
+    .contact-item:hover .contact-icon { color: var(--bright); filter: drop-shadow(0 0 5px rgba(220,0,0,0.7)); }
+    .contact-item:hover .contact-name { color: var(--red); }
+
+    .contact-icon {
+      color: var(--crimson);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: color 0.22s, filter 0.22s;
+    }
+    .contact-name {
+      font-family: 'Special Elite', monospace;
+      font-size: 0.65rem; letter-spacing: 0.08em;
+      color: var(--crimson);
+      text-transform: uppercase;
+      transition: color 0.22s;
+    }
+
+    /* Discord expand */
+    .discord-expand {
+      margin-top: 6px;
+      background: rgba(12,0,0,0.98);
+      border: 1px solid var(--blood);
+      border-radius: 3px;
+      padding: 12px 12px 10px;
+      display: none;
+      flex-direction: column; gap: 10px;
+      box-shadow: inset 0 0 20px rgba(80,0,0,0.15);
+    }
+    .discord-expand.open { display: flex; }
+
+    .discord-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.48rem; letter-spacing: 0.45em;
+      text-transform: uppercase;
+      color: var(--blood);
+    }
+    .discord-user {
+      font-family: 'Special Elite', monospace;
+      font-size: 1rem;
+      color: #ff4444;
+      text-shadow: 0 0 14px rgba(255,40,40,0.55), 0 0 35px rgba(180,0,0,0.4);
+      letter-spacing: 0.04em;
+      word-break: break-all;
+      line-height: 1.3;
+    }
+    .discord-rule { height: 1px; background: var(--dark); }
+    .copy-btn {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      background: rgba(80,0,0,0.25);
+      border: 1px solid var(--dark);
+      padding: 6px 10px; cursor: pointer;
+      color: var(--crimson);
+      font-family: 'Special Elite', monospace;
+      font-size: 0.6rem; letter-spacing: 0.18em;
+      text-transform: uppercase;
+      border-radius: 2px;
+      transition: all 0.22s;
+    }
+    .copy-btn:hover { border-color: var(--blood); color: var(--bright); background: rgba(120,0,0,0.35); }
+    .copy-btn.copied { border-color: var(--bright); color: var(--bright); background: rgba(150,0,0,0.3); }
+  </style>
+</head>
+<body>
+
+<!-- Contact Panel -->
+<div id="contactPanel">
+  <div class="contact-header">✠ &nbsp; Contato &nbsp; ✠</div>
+  <div class="contact-item" id="discordItem">
+    <div class="contact-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.04.033.055a19.896 19.896 0 0 0 5.993 3.03.077.077 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+      </svg>
+    </div>
+    <div class="contact-name">Discord</div>
+  </div>
+  <div class="discord-expand" id="discordExpand">
+    <div class="discord-label">✠ &nbsp; usuário</div>
+    <div class="discord-user">__vpiolxnce</div>
+    <div class="discord-rule"></div>
+    <button class="copy-btn" id="copyBtn">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square">
+        <rect x="9" y="9" width="13" height="13"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+      </svg>
+      <span id="copyLabel">Copiar</span>
+    </button>
+  </div>
+</div>
+
+<!-- Discord circle button -->
+<button id="contactBtn" aria-label="Contato">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.04.033.055a19.896 19.896 0 0 0 5.993 3.03.077.077 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+  </svg>
+</button>
+
+<div id="grain"></div>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+<div id="redpulse"></div>
+<div id="flash"></div>
+
+<!-- Spider webs SVG -->
+<svg id="webs" viewBox="0 0 1440 900" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="position:fixed;inset:0;z-index:0;width:100%;height:100%;pointer-events:none;">
+  <!-- Top-left web -->
+  <g stroke="#8b0000" stroke-width="0.6" fill="none" opacity="0.9">
+    <!-- Radials from corner -->
+    <line x1="0" y1="0" x2="260" y2="0"/>
+    <line x1="0" y1="0" x2="220" y2="60"/>
+    <line x1="0" y1="0" x2="180" y2="110"/>
+    <line x1="0" y1="0" x2="130" y2="150"/>
+    <line x1="0" y1="0" x2="70" y2="200"/>
+    <line x1="0" y1="0" x2="20" y2="240"/>
+    <line x1="0" y1="0" x2="0" y2="280"/>
+    <!-- Concentric arcs -->
+    <path d="M 60,0 Q 50,50 0,60"/>
+    <path d="M 120,0 Q 105,52 80,85 Q 50,105 0,120"/>
+    <path d="M 185,0 Q 165,58 128,100 Q 88,140 40,165 Q 20,172 0,175"/>
+    <path d="M 255,0 Q 228,65 180,115 Q 130,165 72,195 Q 36,210 0,215"/>
+  </g>
+  <!-- Top-right web -->
+  <g stroke="#8b0000" stroke-width="0.6" fill="none" opacity="0.9" transform="translate(1440,0) scale(-1,1)">
+    <line x1="0" y1="0" x2="260" y2="0"/>
+    <line x1="0" y1="0" x2="220" y2="60"/>
+    <line x1="0" y1="0" x2="180" y2="110"/>
+    <line x1="0" y1="0" x2="130" y2="150"/>
+    <line x1="0" y1="0" x2="70" y2="200"/>
+    <line x1="0" y1="0" x2="0" y2="280"/>
+    <path d="M 60,0 Q 50,50 0,60"/>
+    <path d="M 120,0 Q 105,52 80,85 Q 50,105 0,120"/>
+    <path d="M 185,0 Q 165,58 128,100 Q 88,140 40,165 Q 0,175 0,175"/>
+    <path d="M 255,0 Q 228,65 180,115 Q 130,165 72,195 Q 36,210 0,215"/>
+  </g>
+  <!-- Bottom-left web -->
+  <g stroke="#8b0000" stroke-width="0.6" fill="none" opacity="0.9" transform="translate(0,900) scale(1,-1)">
+    <line x1="0" y1="0" x2="200" y2="0"/>
+    <line x1="0" y1="0" x2="160" y2="60"/>
+    <line x1="0" y1="0" x2="110" y2="120"/>
+    <line x1="0" y1="0" x2="50" y2="175"/>
+    <line x1="0" y1="0" x2="0" y2="200"/>
+    <path d="M 55,0 Q 45,45 0,55"/>
+    <path d="M 110,0 Q 92,48 65,80 Q 38,108 0,115"/>
+    <path d="M 170,0 Q 148,54 108,96 Q 64,138 18,158 Q 0,162 0,162"/>
+  </g>
+  <!-- Bottom-right web -->
+  <g stroke="#8b0000" stroke-width="0.6" fill="none" opacity="0.9" transform="translate(1440,900) scale(-1,-1)">
+    <line x1="0" y1="0" x2="200" y2="0"/>
+    <line x1="0" y1="0" x2="160" y2="60"/>
+    <line x1="0" y1="0" x2="110" y2="120"/>
+    <line x1="0" y1="0" x2="50" y2="175"/>
+    <line x1="0" y1="0" x2="0" y2="200"/>
+    <path d="M 55,0 Q 45,45 0,55"/>
+    <path d="M 110,0 Q 92,48 65,80 Q 38,108 0,115"/>
+    <path d="M 170,0 Q 148,54 108,96 Q 64,138 18,158 Q 0,162 0,162"/>
+  </g>
+  <!-- Center faint web -->
+  <g stroke="#6b0000" stroke-width="0.3" fill="none" opacity="0.4" transform="translate(720,450)">
+    <line x1="-120" y1="0" x2="120" y2="0"/>
+    <line x1="0" y1="-100" x2="0" y2="100"/>
+    <line x1="-85" y1="-85" x2="85" y2="85"/>
+    <line x1="85" y1="-85" x2="-85" y2="85"/>
+    <ellipse rx="40" ry="40"/>
+    <ellipse rx="80" ry="80"/>
+    <ellipse rx="120" ry="120"/>
+  </g>
+</svg>
+
+<canvas id="particles"></canvas>
+<div id="toast"></div>
+
+<!-- Page -->
+<div class="page">
+
+  <p class="band-name">System of a Down</p>
+  <h1 class="page-title" id="pageTitle">Spiders</h1>
+  <div class="rule" id="rule"></div>
+
+  <!-- THE PHRASE -->
+  <div class="phrase-wrapper">
+    <div class="phrase-deco" id="phraseDeco">✠ &nbsp; &nbsp; ✠ &nbsp; &nbsp; ✠</div>
+    <p class="phrase" id="phrase">Os vermes vão devorar meu cérebro,<br>minha carne e meus órgãos…<br>mas só você terá o meu <span class="heart" id="heart">coração.</span></p>
+    <div class="phrase-deco-bot" id="phraseDecoBot">✠ &nbsp; &nbsp; ✠ &nbsp; &nbsp; ✠</div>
+  </div>
+
+  <!-- PLAYER -->
+  <div class="player">
+    <div class="progress-track" id="progressTrack">
+      <div class="progress-fill" id="progressFill">
+        <div class="progress-thumb"></div>
+      </div>
+    </div>
+    <div class="time-row">
+      <span class="time-label" id="timeCur">0:00</span>
+      <span class="time-label" id="timeTot">0:00</span>
+    </div>
+
+    <div class="controls">
+      <button class="btn-mode" id="btnShuffle" title="Aleatório">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square">
+          <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
+          <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
+        </svg>
+      </button>
+      <button class="btn-skip" id="btnPrev" aria-label="Anterior">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+          <polygon points="19,20 9,12 19,4"/><rect x="5" y="4" width="2.5" height="16"/>
+        </svg>
+      </button>
+      <button class="btn-play" id="btnPlay" aria-label="Tocar / Pausar">
+        <svg id="iconPlay"  width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+        <svg id="iconPause" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+          <rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
+        </svg>
+      </button>
+      <button class="btn-skip" id="btnNext" aria-label="Próxima">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+          <polygon points="5,4 15,12 5,20"/><rect x="16.5" y="4" width="2.5" height="16"/>
+        </svg>
+      </button>
+      <button class="btn-mode" id="btnRepeat" title="Repetir">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square">
+          <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+          <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="volume-row">
+      <button class="vol-btn" id="volBtn">
+        <svg id="volIcon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        </svg>
+      </button>
+      <input type="range" class="volume-slider" id="volSlider" min="0" max="1" step="0.01" value="0.8"/>
+      <span class="vol-val" id="volVal">80%</span>
+    </div>
+  </div>
+
+  <p class="page-footer">✠ &nbsp; Spiders · SOAD · 2001 &nbsp; ✠</p>
+</div>
+
+<audio id="audio" preload="metadata"></audio>
+
+<!-- Blood drips -->
+<script>
+(function(){
+  const drips = [
+    { left:'8%',  delay:'0s',   d:'4.5s', h:'120px' },
+    { left:'19%', delay:'1.8s', d:'3.8s', h:'90px'  },
+    { left:'33%', delay:'0.6s', d:'5.2s', h:'155px' },
+    { left:'47%', delay:'2.4s', d:'4s',   h:'80px'  },
+    { left:'61%', delay:'0.3s', d:'4.8s', h:'140px' },
+    { left:'75%', delay:'1.4s', d:'3.5s', h:'100px' },
+    { left:'88%', delay:'0.9s', d:'5s',   h:'130px' },
+  ];
+  drips.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'drip';
+    el.style.cssText = `left:${d.left};--d:${d.d};--delay:${d.delay};--h:${d.h}`;
+    document.body.appendChild(el);
+  });
+})();
+</script>
+
+<!-- Particles -->
+<script>
+(function(){
+  const c = document.getElementById('particles');
+  const x = c.getContext('2d');
+  let W, H, pts = [], playing = false;
+
+  function rsz(){ W = c.width = innerWidth; H = c.height = innerHeight; }
+  rsz(); addEventListener('resize', rsz);
+
+  function mk(){
+    const reds = [
+      [180,0,10],[160,0,5],[200,10,10],
+      [120,0,0],[220,20,20],[90,0,0]
+    ];
+    const col = reds[Math.floor(Math.random()*reds.length)];
+    const types = ['dot','dot','spark','cross','dot'];
+    return {
+      x: Math.random() * W,
+      y: Math.random() * H + H * 0.4,
+      r: Math.random() * 2 + 0.5,
+      vy: -(Math.random() * 0.35 + 0.06),
+      vx: (Math.random() - 0.5) * 0.12,
+      aMax: playing ? (Math.random() * 0.22 + 0.06) : (Math.random() * 0.08 + 0.02),
+      t: types[Math.floor(Math.random() * types.length)],
+      d: Math.random() * Math.PI * 2,
+      ds: Math.random() * 0.003 + 0.001,
+      age: 0, life: Math.random() * 220 + 80,
+      col
+    };
+  }
+
+  for(let i = 0; i < 55; i++){ const p = mk(); p.y = Math.random() * H; pts.push(p); }
+
+  function cross(px,py,s){
+    x.fillRect(px-s*0.1,py-s, s*0.2,s*2);
+    x.fillRect(px-s,py-s*0.1, s*2,s*0.2);
+  }
+
+  function draw(){
+    x.clearRect(0,0,W,H);
+    const count = playing ? 75 : 40;
+    while(pts.length < count) pts.push(mk());
+    while(pts.length > count) pts.pop();
+
+    pts.forEach((p,i)=>{
+      p.age++; p.d += p.ds;
+      p.x += p.vx + Math.sin(p.d) * 0.07;
+      p.y += p.vy;
+      if(p.y < -20 || p.age > p.life){ pts[i] = mk(); return; }
+      const lr = p.age/p.life;
+      const fade = lr < 0.12 ? lr/0.12 : lr > 0.78 ? (1-lr)/0.22 : 1;
+      const [r,g,b] = p.col;
+      x.save(); x.globalAlpha = p.aMax * fade;
+      x.fillStyle = `rgb(${r},${g},${b})`;
+      if(p.t==='spark'){
+        x.save(); x.translate(p.x,p.y); x.rotate(p.d);
+        x.fillRect(-p.r*0.12,-p.r*2.2,p.r*0.24,p.r*4.4);
+        x.restore();
+      } else if(p.t==='cross'){
+        cross(p.x,p.y,p.r*1.4);
+      } else {
+        x.beginPath(); x.arc(p.x,p.y,p.r,0,Math.PI*2); x.fill();
+      }
+      x.restore();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+
+  window._setParticlesPlaying = function(v){ playing = v; };
+})();
+</script>
+
+<!-- Player logic -->
+<script>
+(function(){
+  const audio     = document.getElementById('audio');
+  const btnPlay   = document.getElementById('btnPlay');
+  const iPlay     = document.getElementById('iconPlay');
+  const iPause    = document.getElementById('iconPause');
+  const btnPrev   = document.getElementById('btnPrev');
+  const btnNext   = document.getElementById('btnNext');
+  const btnShuffle= document.getElementById('btnShuffle');
+  const btnRepeat = document.getElementById('btnRepeat');
+  const pTrack    = document.getElementById('progressTrack');
+  const pFill     = document.getElementById('progressFill');
+  const timeCur   = document.getElementById('timeCur');
+  const timeTot   = document.getElementById('timeTot');
+  const volSldr   = document.getElementById('volSlider');
+  const volVal    = document.getElementById('volVal');
+  const volBtn    = document.getElementById('volBtn');
+  const volIcon   = document.getElementById('volIcon');
+  const toast     = document.getElementById('toast');
+  const vignette  = document.getElementById('vignette');
+  const redpulse  = document.getElementById('redpulse');
+  const flash     = document.getElementById('flash');
+  const webs      = document.getElementById('webs');
+  const rule      = document.getElementById('rule');
+  const pageTitle = document.getElementById('pageTitle');
+  const phrase    = document.getElementById('phrase');
+  const phraseDeco    = document.getElementById('phraseDeco');
+  const phraseDecoBot = document.getElementById('phraseDecoBot');
+
+  const playlist = [
+    { src:'spiders.mp3', title:'Spiders', artist:'System of a Down', year:'2001' }
+  ];
+
+  let current=0, playing=false, shuffle=false, repeat=0, prevVol=0.8, muted=false;
+  let toastTimer;
+
+  function showToast(msg){
+    clearTimeout(toastTimer);
+    toast.textContent = msg;
+    toast.classList.add('show');
+    toastTimer = setTimeout(()=>toast.classList.remove('show'), 2400);
+  }
+
+  function fmt(s){ if(!s||isNaN(s)||s<0) return '0:00'; return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`; }
+
+  function spawnFloat(cx,cy){
+    const symbols = ['✠','☠','✠','✝','✠','☠'];
+    for(let i=0;i<4;i++){
+      setTimeout(()=>{
+        const el = document.createElement('div');
+        el.className = 'float-el';
+        el.style.left = (cx + (Math.random()-0.5)*80 - 10) + 'px';
+        el.style.top  = (cy + (Math.random()-0.5)*30) + 'px';
+        el.style.setProperty('--rot', (Math.random()*40-20)+'deg');
+        el.textContent = symbols[Math.floor(Math.random()*symbols.length)];
+        document.body.appendChild(el);
+        setTimeout(()=>el.remove(), 2300);
+      }, i*120);
+    }
+  }
+
+  function triggerPlayEffects(){
+    flash.classList.remove('burst');
+    void flash.offsetWidth;
+    flash.classList.add('burst');
+    vignette.classList.add('playing');
+    redpulse.classList.add('on');
+    webs.classList.add('playing');
+    rule.classList.add('playing');
+    pageTitle.classList.add('playing');
+    phrase.classList.add('playing');
+    phraseDeco.classList.add('playing');
+    phraseDecoBot.classList.add('playing');
+    if(window._setParticlesPlaying) window._setParticlesPlaying(true);
+  }
+
+  function triggerPauseEffects(){
+    vignette.classList.remove('playing');
+    redpulse.classList.remove('on');
+    webs.classList.remove('playing');
+    rule.classList.remove('playing');
+    pageTitle.classList.remove('playing');
+    phrase.classList.remove('playing');
+    phraseDeco.classList.remove('playing');
+    phraseDecoBot.classList.remove('playing');
+    if(window._setParticlesPlaying) window._setParticlesPlaying(false);
+  }
+
+  function setPlaying(val){
+    playing = val;
+    iPlay.style.display  = val ? 'none' : 'block';
+    iPause.style.display = val ? 'block' : 'none';
+    btnPlay.classList.toggle('playing', val);
+    pFill.classList.toggle('glow', val);
+    if(val) triggerPlayEffects();
+    else    triggerPauseEffects();
+  }
+
+  function toggle(e){
+    const r = document.createElement('span');
+    r.className = 'ripple';
+    btnPlay.appendChild(r);
+    r.addEventListener('animationend', ()=>r.remove());
+    if(e) spawnFloat(e.clientX, e.clientY);
+    if(playing) audio.pause();
+    else        audio.play().catch(()=>{});
+  }
+
+  function loadSong(idx, autoplay){
+    current = idx;
+    const song = playlist[idx];
+    audio.src = song.src;
+    audio.load();
+    showToast(`▶ ${song.title} — ${song.artist}`);
+    updateVolGradient();
+    if(autoplay) audio.play().catch(()=>{});
+  }
+
+  audio.addEventListener('play',  ()=>setPlaying(true));
+  audio.addEventListener('pause', ()=>setPlaying(false));
+  audio.addEventListener('ended', ()=>{
+    if(repeat===2){ audio.currentTime=0; audio.play(); return; }
+    if(repeat===1){ loadSong(current, true); return; }
+    setPlaying(false); pFill.style.width='0%'; timeCur.textContent='0:00';
+  });
+  audio.addEventListener('loadedmetadata', ()=>{ timeTot.textContent=fmt(audio.duration); audio.volume=parseFloat(volSldr.value); });
+  audio.addEventListener('timeupdate', ()=>{
+    if(!audio.duration) return;
+    pFill.style.width=`${(audio.currentTime/audio.duration)*100}%`;
+    timeCur.textContent=fmt(audio.currentTime);
+  });
+
+  btnPlay.addEventListener('click', e=>toggle(e));
+
+  btnPrev.addEventListener('click', ()=>{
+    if(audio.currentTime>3){ audio.currentTime=0; return; }
+    loadSong(current, playing);
+  });
+  btnNext.addEventListener('click', ()=>{ loadSong(current, playing); });
+
+  btnShuffle.addEventListener('click', ()=>{
+    shuffle=!shuffle;
+    btnShuffle.classList.toggle('active',shuffle);
+    showToast(shuffle?'// ALEATÓRIO ON':'// ALEATÓRIO OFF');
+  });
+
+  const repeatLabels=['// REPETIR OFF','// REPETIR TUDO','// REPETIR 1'];
+  btnRepeat.addEventListener('click', ()=>{
+    repeat=(repeat+1)%3;
+    btnRepeat.classList.toggle('active',repeat>0);
+    showToast(repeatLabels[repeat]);
+  });
+
+  function seekAt(clientX){
+    const rect=pTrack.getBoundingClientRect();
+    const ratio=Math.max(0,Math.min(1,(clientX-rect.left)/rect.width));
+    if(audio.duration) audio.currentTime=ratio*audio.duration;
+  }
+  let drag=false;
+  pTrack.addEventListener('click', e=>seekAt(e.clientX));
+  pTrack.addEventListener('mousedown',()=>drag=true);
+  addEventListener('mouseup',()=>drag=false);
+  addEventListener('mousemove',e=>{ if(drag) seekAt(e.clientX); });
+  pTrack.addEventListener('touchstart',e=>{e.preventDefault();seekAt(e.touches[0].clientX);},{passive:false});
+  pTrack.addEventListener('touchmove', e=>{e.preventDefault();seekAt(e.touches[0].clientX);},{passive:false});
+
+  function updateVolGradient(){
+    const pct=parseFloat(volSldr.value)*100;
+    volSldr.style.background=`linear-gradient(to right,rgba(180,0,0,0.8) 0%,rgba(180,0,0,0.8) ${pct}%,rgba(80,0,0,0.2) ${pct}%,rgba(80,0,0,0.2) 100%)`;
+    volVal.textContent=Math.round(pct)+'%';
+    volIcon.innerHTML=pct>0
+      ?`<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>`
+      :`<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15" stroke="currentColor"/><line x1="17" y1="9" x2="23" y2="15" stroke="currentColor"/>`;
+  }
+  volSldr.addEventListener('input',()=>{ audio.volume=parseFloat(volSldr.value); muted=false; updateVolGradient(); });
+  volBtn.addEventListener('click',()=>{
+    muted=!muted;
+    if(muted){ prevVol=parseFloat(volSldr.value); volSldr.value=0; audio.volume=0; }
+    else { volSldr.value=prevVol; audio.volume=prevVol; }
+    updateVolGradient();
+  });
+
+  addEventListener('keydown', e=>{
+    if(e.target!==document.body) return;
+    if(e.code==='Space'){ e.preventDefault(); toggle(); }
+    if(e.code==='ArrowLeft') audio.currentTime=Math.max(0,audio.currentTime-5);
+    if(e.code==='ArrowRight') audio.currentTime=Math.min(audio.duration||0,audio.currentTime+5);
+    if(e.code==='ArrowUp'){ volSldr.value=Math.min(1,parseFloat(volSldr.value)+0.05); audio.volume=parseFloat(volSldr.value); updateVolGradient(); }
+    if(e.code==='ArrowDown'){ volSldr.value=Math.max(0,parseFloat(volSldr.value)-0.05); audio.volume=parseFloat(volSldr.value); updateVolGradient(); }
+  });
+
+  loadSong(0, false);
+  audio.volume=parseFloat(volSldr.value);
+  updateVolGradient();
+})();
+</script>
+
+<!-- Contact logic -->
+<script>
+(function(){
+  const contactBtn    = document.getElementById('contactBtn');
+  const contactPanel  = document.getElementById('contactPanel');
+  const discordItem   = document.getElementById('discordItem');
+  const discordExpand = document.getElementById('discordExpand');
+  const copyBtn       = document.getElementById('copyBtn');
+  const copyLabel     = document.getElementById('copyLabel');
+  const DISCORD_USER  = '__vpiolxnce';
+  let panelOpen = false, discordOpen = false, copyTimer;
+
+  contactBtn.addEventListener('click', () => {
+    panelOpen = !panelOpen;
+    contactPanel.classList.toggle('open', panelOpen);
+    contactBtn.classList.toggle('panel-open', panelOpen);
+    if(!panelOpen){ discordExpand.classList.remove('open'); discordOpen = false; }
+  });
+
+  discordItem.addEventListener('click', () => {
+    discordOpen = !discordOpen;
+    discordExpand.classList.toggle('open', discordOpen);
+  });
+
+  copyBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const doCopy = () => {
+      clearTimeout(copyTimer);
+      copyLabel.textContent = 'Copiado ✠';
+      copyBtn.classList.add('copied');
+      copyTimer = setTimeout(() => { copyLabel.textContent = 'Copiar'; copyBtn.classList.remove('copied'); }, 2200);
+    };
+    navigator.clipboard.writeText(DISCORD_USER).then(doCopy).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = DISCORD_USER; ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+      document.body.removeChild(ta); doCopy();
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    if(!contactPanel.contains(e.target) && !contactBtn.contains(e.target)){
+      panelOpen = false; discordOpen = false;
+      contactPanel.classList.remove('open');
+      contactBtn.classList.remove('panel-open');
+      discordExpand.classList.remove('open');
+    }
+  });
+})();
+</script>
+</body>
+</html>
